@@ -1,0 +1,32 @@
+# Compiled binaries
+circle-droplet
+droplet-impact-orifice
+droplet-impact-orifice-nondim
+droplet-impact-sharp-orifice
+droplet-impact-sharp-orifice-nondim
+droplet-impact-round-orifice
+*.o
+a.out
+
+# Simulation output
+log
+log-*
+*.mp4
+*.ppm
+*.png
+out-*
+field-*
+dump-*
+*.dat
+*.txt
+
+# Verification output
+test-output/
+compile-*.log
+basilisk-install*.log
+
+# System files
+*~
+.DS_Store
+*.swp
+*.swo
