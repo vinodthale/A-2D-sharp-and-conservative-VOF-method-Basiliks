@@ -47,54 +47,156 @@ Simulates the axisymmetric impact of a droplet on a flat plate containing a circ
 
 ## Quick Start
 
-### Prerequisites
+### Step 1: Install Basilisk C
 
-- Basilisk C (http://basilisk.fr/)
-- C compiler (gcc recommended)
-- MPI (optional, for parallel execution)
+**New to Basilisk?** See our comprehensive guides:
 
-### Compilation
+- **[BASILISK_INSTALL.md](BASILISK_INSTALL.md)** - Complete installation guide for Linux, macOS, and Windows (WSL)
+- **[setup-basilisk.sh](setup-basilisk.sh)** - Automated installation script
 
+**Quick install** (Linux/Ubuntu):
+```bash
+# Automated installation
+./setup-basilisk.sh
+
+# Or manual installation
+sudo apt install darcs gcc make gawk
+darcs clone http://basilisk.fr/basilisk ~/basilisk
+cd ~/basilisk/src && ln -s config.gcc config && make
+export BASILISK=$HOME/basilisk
+export PATH=$PATH:$BASILISK
+```
+
+**Verify installation**:
+```bash
+make check-basilisk
+```
+
+### Step 2: Compile Simulations
+
+**Using Makefile** (recommended):
+```bash
+# Build all simulations
+make
+
+# Build specific simulation
+make circle-droplet
+make droplet-impact-orifice
+
+# High resolution build
+make high-res MAXLEVEL=10
+
+# With MPI support
+make mpi
+```
+
+**Manual compilation**:
 ```bash
 # Original cylinder simulation
 qcc -O2 -Wall -o circle-droplet circle-droplet.c -lm
 
-# New droplet impact simulation
+# Droplet impact simulation
 qcc -O2 -Wall -o droplet-impact-orifice droplet-impact-orifice.c -lm
+
+# High resolution
+qcc -O3 -DMAXLEVEL=10 -o droplet-impact-orifice droplet-impact-orifice.c -lm
 ```
 
-### Execution
+**See**: [BASILISK_CONFIG.md](BASILISK_CONFIG.md) for compiler flags and optimization options
+
+### Step 3: Run Simulations
 
 ```bash
 # Run simulation and save log
 ./droplet-impact-orifice 2> log
 
+# Run in background
+./droplet-impact-orifice 2> log &
+
+# Monitor progress
+tail -f log
+
 # View results
-tail -f log  # Monitor progress
 ls *.mp4     # Check for video output
+ls field-*   # Check for field data
 ```
 
 ## File Structure
 
 ```
 .
-├── README.md                      # This file
-├── DROPLET_IMPACT_ORIFICE.md     # Detailed documentation for droplet impact
-├── circle-droplet.c               # Original: droplet on cylinder
-├── droplet-impact-orifice.c       # New: droplet impact on plate with orifice
-├── myembed.h                      # Embedded boundary utilities
-├── embed_contact.h                # Contact line dynamics
-├── embed_two-phase.h              # Two-phase flow solver
-├── embed_tension.h                # Surface tension
-├── embed_vof.h                    # VOF advection
-├── embed_curvature.h              # Interface curvature
-├── embed_heights.h                # Height function method
-├── embed_height_normal.h          # Normal calculation
-├── embed_correct_height.h         # Height correction
-├── embed_iforce.h                 # Interfacial forces
-├── TPR2D.h                        # Two-phase reconstruction
-└── tmp_fraction_field.h           # Temporary field storage
+├── README.md                          # This file - Project overview
+│
+├── Documentation/
+│   ├── BASILISK_INSTALL.md            # Basilisk installation guide
+│   ├── BASILISK_CONFIG.md             # Basilisk configuration and compiler flags
+│   ├── BASILISK_FEATURES.md           # Basilisk features used in this project
+│   ├── DROPLET_IMPACT_ORIFICE.md      # Droplet impact simulation details
+│   ├── DROPLET_IMPACT_SPECS.md        # Simulation specifications
+│   ├── README_DROPLET_IMPACT.md       # Additional droplet impact documentation
+│   ├── NON-DIMENSIONALIZATION.md      # Non-dimensional formulation
+│   └── AXISYMMETRIC_GUIDE.md          # Axisymmetric coordinates guide
+│
+├── Build System/
+│   ├── Makefile                       # Build all simulations
+│   ├── setup-basilisk.sh              # Automated Basilisk installation script
+│   ├── compile-droplet-impact.sh      # Compile droplet impact simulations
+│   ├── run-sharp-orifice.sh           # Run sharp orifice simulation
+│   └── run-round-orifice.sh           # Run round orifice simulation
+│
+├── Simulations/
+│   ├── circle-droplet.c               # Original: droplet spreading on cylinder
+│   ├── droplet-impact-orifice.c       # Droplet impact (dimensional)
+│   ├── droplet-impact-orifice-nondim.c    # Droplet impact (non-dimensional)
+│   ├── droplet-impact-sharp-orifice.c     # Sharp edge orifice (dimensional)
+│   ├── droplet-impact-sharp-orifice-nondim.c  # Sharp edge (non-dimensional)
+│   └── droplet-impact-round-orifice.c     # Round edge orifice
+│
+└── Custom Basilisk Headers/
+    ├── axi.h                          # Axisymmetric coordinates
+    ├── myembed.h                      # Embedded boundary utilities
+    ├── embed_contact.h                # Contact line dynamics
+    ├── embed_two-phase.h              # Two-phase flow solver
+    ├── embed_tension.h                # Surface tension
+    ├── embed_vof.h                    # VOF advection
+    ├── embed_curvature.h              # Interface curvature
+    ├── embed_heights.h                # Height function method
+    ├── embed_height_normal.h          # Normal calculation
+    ├── embed_correct_height.h         # Height correction
+    ├── embed_iforce.h                 # Interfacial forces
+    ├── TPR2D.h                        # Two-phase reconstruction
+    └── tmp_fraction_field.h           # Temporary field storage
 ```
+
+## Documentation
+
+This repository includes comprehensive documentation:
+
+### Basilisk Setup
+- **[BASILISK_INSTALL.md](BASILISK_INSTALL.md)** - Complete installation guide
+  - System requirements and dependencies
+  - Installation methods (darcs and tarball)
+  - Platform-specific instructions (Linux, macOS, Windows/WSL)
+  - Troubleshooting and verification
+
+- **[BASILISK_CONFIG.md](BASILISK_CONFIG.md)** - Configuration and optimization
+  - Environment variables setup
+  - Compiler flags and options
+  - MPI configuration for parallel execution
+  - Performance tuning recommendations
+
+- **[BASILISK_FEATURES.md](BASILISK_FEATURES.md)** - Basilisk features guide
+  - VOF method implementation
+  - Embedded boundary method
+  - Adaptive mesh refinement
+  - Two-phase flow solver
+  - Surface tension and contact line dynamics
+
+### Simulation Documentation
+- **[DROPLET_IMPACT_ORIFICE.md](DROPLET_IMPACT_ORIFICE.md)** - Droplet impact simulations
+- **[AXISYMMETRIC_GUIDE.md](AXISYMMETRIC_GUIDE.md)** - Axisymmetric coordinates
+- **[NON-DIMENSIONALIZATION.md](NON-DIMENSIONALIZATION.md)** - Non-dimensional formulation
+- **[DROPLET_IMPACT_SPECS.md](DROPLET_IMPACT_SPECS.md)** - Simulation specifications
 
 ## Method Overview
 
