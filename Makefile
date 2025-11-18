@@ -11,8 +11,13 @@
 # Compiler
 QCC = qcc
 
-# Default flags
-CFLAGS = -O2 -Wall
+# Source directories
+SRC_AXI = src/axisymmetric
+SRC_2D = src/2d-cartesian
+INCLUDE = include/basilisk
+
+# Default flags (include custom headers)
+CFLAGS = -O2 -Wall -I$(INCLUDE)/core -I$(INCLUDE)/methods
 LDFLAGS = -lm
 
 # Maximum refinement level (override with: make MAXLEVEL=10)
@@ -40,28 +45,28 @@ all: $(TARGETS)
 	$(QCC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 # Circle droplet simulation
-circle-droplet: circle-droplet.c myembed.h embed_*.h TPR2D.h tmp_fraction_field.h
+circle-droplet: $(SRC_2D)/circle-droplet.c
 	@echo "Compiling circle-droplet..."
 	$(QCC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 # Droplet impact simulations
-droplet-impact-orifice: droplet-impact-orifice.c axi.h myembed.h embed_*.h
+droplet-impact-orifice: $(SRC_AXI)/droplet-impact-orifice.c
 	@echo "Compiling droplet-impact-orifice..."
 	$(QCC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-droplet-impact-orifice-nondim: droplet-impact-orifice-nondim.c axi.h myembed.h embed_*.h
+droplet-impact-orifice-nondim: $(SRC_AXI)/droplet-impact-orifice-nondim.c
 	@echo "Compiling droplet-impact-orifice-nondim..."
 	$(QCC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-droplet-impact-sharp-orifice: droplet-impact-sharp-orifice.c axi.h myembed.h embed_*.h
+droplet-impact-sharp-orifice: $(SRC_AXI)/droplet-impact-sharp-orifice.c
 	@echo "Compiling droplet-impact-sharp-orifice..."
 	$(QCC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-droplet-impact-sharp-orifice-nondim: droplet-impact-sharp-orifice-nondim.c axi.h myembed.h embed_*.h
+droplet-impact-sharp-orifice-nondim: $(SRC_AXI)/droplet-impact-sharp-orifice-nondim.c
 	@echo "Compiling droplet-impact-sharp-orifice-nondim..."
 	$(QCC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-droplet-impact-round-orifice: droplet-impact-round-orifice.c axi.h myembed.h embed_*.h
+droplet-impact-round-orifice: $(SRC_AXI)/droplet-impact-round-orifice.c
 	@echo "Compiling droplet-impact-round-orifice..."
 	$(QCC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
@@ -172,34 +177,26 @@ help:
 	@echo "  make CFLAGS='-O3 -march=native'   Custom optimization"
 	@echo ""
 	@echo "For more information, see:"
-	@echo "  README.md              Project overview"
-	@echo "  BASILISK_INSTALL.md    Installation guide"
-	@echo "  BASILISK_CONFIG.md     Configuration guide"
+	@echo "  README.md                      Project overview"
+	@echo "  docs/BASILISK_INSTALL.md       Installation guide"
+	@echo "  docs/BASILISK_CONFIG.md        Configuration guide"
 
 # Phony targets that don't correspond to files
 .PHONY: all clean clean-all test high-res production debug mpi check-basilisk help
 
-# Dependencies for header files
-circle-droplet: myembed.h embed_contact.h embed_two-phase.h embed_tension.h \
-                embed_vof.h embed_curvature.h embed_heights.h embed_height_normal.h \
-                embed_correct_height.h embed_iforce.h TPR2D.h tmp_fraction_field.h
+# Header file dependencies
+HEADERS_CORE = $(INCLUDE)/core/axi.h $(INCLUDE)/core/myembed.h
+HEADERS_METHODS = $(INCLUDE)/methods/embed_contact.h $(INCLUDE)/methods/embed_two-phase.h \
+                  $(INCLUDE)/methods/embed_tension.h $(INCLUDE)/methods/embed_vof.h \
+                  $(INCLUDE)/methods/embed_curvature.h $(INCLUDE)/methods/embed_heights.h \
+                  $(INCLUDE)/methods/embed_height_normal.h $(INCLUDE)/methods/embed_correct_height.h \
+                  $(INCLUDE)/methods/embed_iforce.h $(INCLUDE)/methods/TPR2D.h \
+                  $(INCLUDE)/methods/tmp_fraction_field.h
 
-droplet-impact-orifice: axi.h myembed.h embed_contact.h embed_two-phase.h \
-                        embed_tension.h embed_vof.h embed_curvature.h embed_heights.h \
-                        embed_height_normal.h embed_correct_height.h embed_iforce.h
-
-droplet-impact-orifice-nondim: axi.h myembed.h embed_contact.h embed_two-phase.h \
-                               embed_tension.h embed_vof.h embed_curvature.h embed_heights.h \
-                               embed_height_normal.h embed_correct_height.h embed_iforce.h
-
-droplet-impact-sharp-orifice: axi.h myembed.h embed_contact.h embed_two-phase.h \
-                              embed_tension.h embed_vof.h embed_curvature.h embed_heights.h \
-                              embed_height_normal.h embed_correct_height.h embed_iforce.h
-
-droplet-impact-sharp-orifice-nondim: axi.h myembed.h embed_contact.h embed_two-phase.h \
-                                     embed_tension.h embed_vof.h embed_curvature.h embed_heights.h \
-                                     embed_height_normal.h embed_correct_height.h embed_iforce.h
-
-droplet-impact-round-orifice: axi.h myembed.h embed_contact.h embed_two-phase.h \
-                              embed_tension.h embed_vof.h embed_curvature.h embed_heights.h \
-                              embed_height_normal.h embed_correct_height.h embed_iforce.h
+# Dependencies for simulations
+circle-droplet: $(SRC_2D)/circle-droplet.c $(HEADERS_CORE) $(HEADERS_METHODS)
+droplet-impact-orifice: $(SRC_AXI)/droplet-impact-orifice.c $(HEADERS_CORE) $(HEADERS_METHODS)
+droplet-impact-orifice-nondim: $(SRC_AXI)/droplet-impact-orifice-nondim.c $(HEADERS_CORE) $(HEADERS_METHODS)
+droplet-impact-sharp-orifice: $(SRC_AXI)/droplet-impact-sharp-orifice.c $(HEADERS_CORE) $(HEADERS_METHODS)
+droplet-impact-sharp-orifice-nondim: $(SRC_AXI)/droplet-impact-sharp-orifice-nondim.c $(HEADERS_CORE) $(HEADERS_METHODS)
+droplet-impact-round-orifice: $(SRC_AXI)/droplet-impact-round-orifice.c $(HEADERS_CORE) $(HEADERS_METHODS)
