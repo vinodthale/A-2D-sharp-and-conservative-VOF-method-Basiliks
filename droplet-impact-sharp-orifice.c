@@ -90,6 +90,35 @@ face vector av[];
 vector contact_angle[];
 scalar edge_marker[];  // Marker for sharp edge region
 
+/**
+ * Boundary conditions for 2D axisymmetric simulation
+ */
+
+// Embedded geometry (solid plate): no-slip walls
+u.t[embed] = dirichlet(0.);
+u.n[embed] = dirichlet(0.);
+
+// Bottom boundary (z = 0): wall
+u.n[bottom] = dirichlet(0.);
+u.t[bottom] = dirichlet(0.);
+
+// Top boundary (z = L0): outflow
+u.n[top] = neumann(0.);
+u.t[top] = neumann(0.);
+p[top] = dirichlet(0.);
+
+// Right boundary (far field, r = L0): outflow
+u.n[right] = neumann(0.);
+u.t[right] = neumann(0.);
+p[right] = dirichlet(0.);
+
+// Left boundary (axis of symmetry, r = 0)
+// Axisymmetric conditions: u_r = 0, du_z/dr = 0
+u.n[left] = dirichlet(0.);  // radial velocity = 0
+u.t[left] = neumann(0.);    // axial velocity gradient = 0
+f[left] = neumann(0.);
+cs[left] = neumann(0.);
+
 int main() {
   size (L0);
   origin (0., 0.);
