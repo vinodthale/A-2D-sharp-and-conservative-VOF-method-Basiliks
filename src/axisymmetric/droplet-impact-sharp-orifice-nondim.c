@@ -209,7 +209,7 @@ event init (t = 0) {
   // Initialize droplet (spherical, falling under gravity)
   // In non-dim: D=1, starting at rest (gravity will accelerate it)
   // Or we can initialize with impact velocity U*=1
-  fraction (f, -sq(x) - sq(y - DROPLET_POS_Y) + sq(R_DROPLET));
+  fraction (f, -(sq(x) + sq(y - DROPLET_POS_Y) - sq(R_DROPLET)));
 
   // Initialize edge marker for sharp edge regions
   foreach() {
@@ -357,7 +357,9 @@ event snapshots (t = {0.49*T_GRAVITY_ND, 0.73*T_GRAVITY_ND,
 #include "view.h"
 
 event movie (t += T_END/500.) {
-  static FILE * fp = fopen ("movie_sharp_nondim.ppm", "w");
+  static FILE * fp = NULL;
+  if (fp == NULL)
+    fp = fopen ("movie_sharp_nondim.ppm", "w");
 
   view (width = 800, height = 800);
   clear();

@@ -203,7 +203,7 @@ event init (t = 0) {
   fractions (phi, cs, fs);
 
   // Initialize droplet
-  fraction (f, -sq(x) - sq(y - DROPLET_POS_Y) + sq(R_DROPLET));
+  fraction (f, -(sq(x) + sq(y - DROPLET_POS_Y) - sq(R_DROPLET)));
 
   // Initialize contact angle (180 degrees = no wetting)
   foreach() {
@@ -296,7 +296,9 @@ event output (t += 0.001) {
 #include "view.h"
 
 event movie (t += 0.0002) {
-  static FILE * fp = fopen ("movie_round.ppm", "w");
+  static FILE * fp = NULL;
+  if (fp == NULL)
+    fp = fopen ("movie_round.ppm", "w");
 
   view (width = 800, height = 800);
   clear();

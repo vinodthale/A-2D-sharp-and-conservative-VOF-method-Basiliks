@@ -191,7 +191,7 @@ event init (t = 0) {
   fractions (phi, cs, fs);
 
   // Initialize droplet
-  fraction (f, -sq(x) + sq(y - DROPLET_POS_Y) + sq(R_DROPLET));
+  fraction (f, -(sq(x) + sq(y - DROPLET_POS_Y) - sq(R_DROPLET)));
 
   // Initialize edge marker for sharp edge regions
   foreach() {
@@ -349,7 +349,9 @@ event snapshots (t = {0.49*T_GRAVITY, 0.73*T_GRAVITY, 0.90*T_GRAVITY, 1.04*T_GRA
 #include "view.h"
 
 event movie (t += 0.0002) {
-  static FILE * fp = fopen ("movie_sharp.ppm", "w");
+  static FILE * fp = NULL;
+  if (fp == NULL)
+    fp = fopen ("movie_sharp.ppm", "w");
 
   view (width = 800, height = 800);
   clear();
