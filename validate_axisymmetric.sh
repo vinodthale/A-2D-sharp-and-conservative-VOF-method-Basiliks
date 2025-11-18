@@ -88,8 +88,8 @@ for file in droplet-impact*.c; do
             ((WARNINGS++))
         fi
 
-        # Check origin
-        if grep -q "origin(0[.]*[ ]*,[ ]*0[.]*)" "$file" 2>/dev/null; then
+        # Check origin (allows space after origin)
+        if grep -q "origin[ ]*(0[.]*[ ]*,[ ]*0[.]*)" "$file" 2>/dev/null; then
             echo -e "${GREEN}✓${NC} Correct origin(0., 0.)"
             ((PASSED++))
         else
