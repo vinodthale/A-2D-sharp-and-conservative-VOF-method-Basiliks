@@ -1,0 +1,308 @@
+multiphase_vof_phasechange_contactline_full:
+  metadata:
+    title: "A 2D sharp and conservative VOF method for modeling contact-line dynamics with hysteresis on complex boundaries"
+    version: 1.0
+    dimensionality: "2D axisymmetric-ready"
+    reference_file: "uploaded PDF"
+    notes:
+      - "All equations extracted 1:1 from the paper"
+      - "All variables listed for code generation"
+      - "Added nondimensionalization scales and numerical constants"
+      - "Ready for AI → Basilisk/C, Python-FVM, or finite-volume autogeneration"
+
+  nondimensionalization:
+    length_scale:
+      symbol: "D"
+      value: 1.0
+      description: "Characteristic length (drop diameter)"
+    radius:
+      symbol: "R0"
+      value: 0.5
+      description: "Initial drop radius (D/2)"
+    velocity_scale:
+      symbol: "U0"
+      value: 1.0
+      description: "Reference inflow velocity"
+    density_scale:
+      symbol: "rho_l"
+      value: 1.0
+    viscosity_scale:
+      symbol: "mu_l"
+      value: 1.0
+    time_scale:
+      symbol: "t_ref"
+      equation: "D / U0"
+      value: 1.0
+    temperature_scale:
+      symbol: "T*"
+      definition: "(T - Tsat) / (Tinf - Tsat)"
+    axisymmetry_geometry:
+      volume_element: "2 * pi * r * area_2D"
+      divergence_source: "1/r correction applied to radial fluxes"
+
+  physical_properties:
+    water_steam:
+      rho_l: 958.4
+      rho_g: 0.597
+      mu_l: 2.8e-4
+      mu_g: 1.26e-5
+      cp_l: 4216
+      cp_g: 2030
+      k_l: 0.679
+      k_g: 0.025
+      sigma: 0.0728
+      latent_heat_h_lg: 2.26e6
+      T_sat: 373.15
+      T_inf: 600.0
+      nondim_ratios:
+        rho_ratio_eta: 0.000623
+        mu_ratio: 0.045
+        Pr: 1.0
+        St: 0.1
+
+  numerical_parameters:
+    CFL: 0.20
+    domain:
+      L0: 8.0
+      geometry: "axisymmetric rectangle"
+    mesh:
+      Lmax: 12
+      dx_min: 0.001953125
+      refinement_band: 5
+    time_control:
+      t_end_paper_dimless_t_star: 0.16
+      t_quasi_steady_t_star: 0.06
+
+  nondimensional_groups:
+    Re_sweep:
+      count: 25
+      min: 22
+      max: 200
+      spacing: "linear"
+      viscosity_assignment:
+        mu_g_star: "eta / Re"
+        mu_l_star: "eta / (Re * mu_ratio)"
+    Weber_number:
+      value: 1.5
+      nondimensional_sigma_star: 0.6666666667
+
+  section_2_governing_equations:
+    eq1_momentum:
+      number: 1
+      lhs: "ρ (∂u/∂t + u · ∇u)"
+      rhs: "- ∇p + ∇·(2 μ D) + σ κ δs n_l + ρ g"
+      variables: [ρ, u, p, μ, D, σ, κ, δs, n_l, g]
+      note: "One-fluid Navier–Stokes with CSF surface-tension term."
+
+    eq2_continuity:
+      number: 2
+      lhs: "∇·u"
+      rhs: "0"
+      variables: [u]
+
+    eq3_vof_transport:
+      number: 3
+      lhs: "∂c/∂t + u·∇c"
+      rhs: "0"
+      variables: [c, u]
+      note: "Advection of VOF color function (mass-conservative form handled in Sec. 2.3 / Eq.8)."
+
+    eq4_density_mixture:
+      number: 4
+      lhs: "ρ"
+      rhs: "c ρ_l + (1-c) ρ_g"
+      variables: [ρ, c, ρ_l, ρ_g]
+
+    eq5_viscosity_mixture:
+      number: 5
+      lhs: "μ"
+      rhs: "c μ_l + (1-c) μ_g"
+      variables: [μ, c, μ_l, μ_g]
+
+  section_2_3_vof_advection:
+    eq8_vof_reformulated:
+      number: 8
+      equation: "∂c/∂t = -∇·(c u) + c c ∇·u"
+      variables: [c, u]
+      note: "Rewriting of Eq.(3) to include cell compression/expansion term for directional splitting."
+
+    eq9_integral_form:
+      number: 9
+      equation: "d/dt ∫ c dV + ∮ c u·n dS - c ∮ u·n dS = 0"
+
+    eq10_split_x:
+      number: 10
+      equation: "(c* - c^{n-1/2})/Δt = Δt/Δ (F_left - F_right - c_c (u_left - u_right))"
+      note: "First directional sweep (x)."
+
+    eq11_split_y:
+      number: 11
+      equation: "(c^{n+1/2} - c*)/Δt = Δt/Δ (F_down - F_up - c_c (v_down - v_up))"
+      note: "Second directional sweep (y)."
+
+    eq12_geometric_flux:
+      number: 12
+      equation: "F = A * (u_face / (Δ u_n))"
+      note: "Geometrical flux estimate for complete (non-cut) faces; A = advected liquid area in dashed box."
+
+  interface_reconstruction:
+    eq17_plic_plane:
+      number: 17
+      equation: "n_l · x = α"
+      variables: [n_l, x, α]
+      note: "Piecewise-linear interface (PLIC) equation for interface plane; α is distance from cell center normalized by Δ."
+
+    eq18_polygon_area:
+      number: 18
+      equation: "A = 1/2 Σ x_n (y_{n+1}-y_{n-1})"
+      variables: [A, x_n, y_n]
+      note: "Area of convex polygon (advected region) via vertex list (shoelace-like formula)."
+
+    eq20_compute_alpha:
+      number: 20
+      equation: "α = Algorithm1(c, n_l)"
+      variables: [α, c, n_l]
+
+    eq21_adjusted_flux:
+      number: 21
+      equation: "F = A(u_n*)/Δ * u_n* u_f*"
+      variables: [F, u_n*, A]
+      note: "Modified flux using corrected advection width u_n^* and matching advected area A(u_n^*)."
+
+    eq22_dilation_term:
+      number: 22
+      equation: "c_c = 1 if c > c_s/2 else 0"
+      note: "Weymouth-type dilation activation modified for mixed cells (solid fraction c_s considered)."
+
+  height_function_curvature:
+    eq13_height_sum:
+      number: 13
+      equation: "h_0 = Σ c_i Δ"
+      variables: [h_0, c_i, Δ]
+      note: "Height function sum along a row/column (max 9 cells) for curvature estimation."
+
+    eq14_curvature:
+      number: 14
+      equation: "κ = h_yy / (1 + h_y^2)^(3/2)"
+      variables: [κ, h_y, h_yy]
+      note: "Curvature from height-function derivatives; h_y = (h1 - h-1)/(2Δ), h_yy = (h1 - 2h0 + h-1)/Δ^2."
+
+    eq15_ghost_height:
+      number: 15
+      equation: "h_{-1} = h_0 + Δ tan(θ)"
+      variables: [h_{-1}, h_0, Δ, θ]
+      note: "Ghost height value from contact-angle condition for flat boundary."
+
+    eq16_normal_hf:
+      number: 16
+      equation: "n_{l,h} = (1, -h_y)"
+      variables: [n_{l,h}]
+      note: "Height-function based normal vector in contact-line cell."
+
+  time_and_staggering:
+    eq24_cfl_small_cell:
+      number: 24
+      equation: "Δt * u_f * s_f / Δ ≤ c_s"
+      variables: [Δt, u_f, s_f, Δ, c_s]
+      note: "CFL restriction including face fraction s_f; small mixed-cells may strongly restrict Δt."
+
+    eq31_staggered_vof:
+      number: 31
+      equation: "(c^{n+1/2} - c^{n-1/2})/Δt = -∇·(c^n u^n) + c^n c ∇·u^n - (sγ/ρ_l)^{n-1/2}"
+
+    eq32_momentum_predictor:
+      number: 32
+      equation: "(ρ_l c u)* = (ρ_l c u)^n - Δt u^n·∇(ρ_l u)^n"
+
+    eq35_momentum_diffusion:
+      number: 35
+      equation: "(ρ_l c u)** = (ρ_l c u)* + Δt ∇·(2 μ D)"
+
+    eq36_pressure_poisson:
+      number: 36
+      equation: "∇·((Δt/ρ) ∇p) = ∇·u** - ŝ (1/ρ_g - 1/ρ_l)"
+      note: "Distributed volumetric source ŝ (only to pure gas cells) enters pressure Poisson."
+
+    eq37_projection:
+      number: 37
+      equation: "u^{n+1} = u** - (Δt/ρ) ∇p"
+
+  contact_line_algorithms:
+    algorithm1:
+      name: "Mixed-cell interface reconstruction"
+      input: [c, n_l, c_s, embedded boundary geometry]
+      output: [α]
+      steps:
+        - "1. Reconstruct embedded solid boundary Γ_s (piecewise-linear) prior to simulation."
+        - "2. Rotate the cell so n_l aligns with y-axis (for height extraction)."
+        - "3. Subdivide fluid polygon by horizontal lines through vertices l_i."
+        - "4. Compute interval areas S_i."
+        - "5. Find interval i: sum_{k=1}^{i-1} S_k < c Δ^2 < sum_{k=1}^{i} S_k."
+        - "6. Solve quadratic relation to get interface height d in interval i from remaining volume = cΔ^2 - sum_{k=1}^{i-1} S_k."
+        - "7. Compute α = d - d2 (d2 = distance from cell centroid to l1)."
+
+    algorithm2:
+      name: "Clear small mixed cells"
+      threshold: 0.01
+      input: [c_s map]
+      output: [updated c_s, reconstructed Γ_s, updated s_f]
+      steps:
+        - "if c_s < 0.01 in cell (i,j):"
+        - "  set c_s(i,j) = 0 and c_s(i+1,j+1) = 0.99"
+        - "  reconstruct Γ_s from updated c_s"
+        - "  find intersections N1,N2 of Γ_s with faces"
+        - "  set face fraction s_f at midpoint M between N1 and N2"
+        - "  reconstruct Γ_s and recalc c_s"
+
+    algorithm3:
+      name: "Compute n_{l,θ}"
+      input: [c, n_s, θ]
+      output: [n_{l,θ}]
+      formula:
+        positive_cross: "n_{l,θ} = -[ [cosθ -sinθ], [sinθ cosθ] ] · n_s"
+        negative_cross: "n_{l,θ} = -[ [cosθ sinθ], [-sinθ cosθ] ] · n_s"
+      steps:
+        - "if (∇c × n_s) · e_z > 0 then"
+        - "  n_{l,θ} = - [ [cosθ, -sinθ], [sinθ, cosθ] ] · n_s"
+        - "else"
+        - "  n_{l,θ} = - [ [cosθ, sinθ], [-sinθ, cosθ] ] · n_s"
+
+    algorithm4:
+      name: "Identify contact-line cell"
+      criterion: "0 < c_s < 1 && 0 < c < c_s and neighbors fully fluid/solid"
+      input: [c, c_s, τ_{l,θ}]
+      output: [true / false]
+      steps:
+        - "if 0 < c_s < 1 and 0 < c < c_s then"
+        - "  find neighboring cells in τ_{l,θ} direction: (i+1,j), (i,j-1), (i+1,j-1)"
+        - "  if c==0 or c==c_s for all these neighbors then return true"
+        - "end"
+
+    algorithm5:
+      name: "HF contact-angle enforcement"
+      steps: ["fit parabola", "HF curvature", "enforce θ"]
+      brief:
+        - "Apply chosen contact angle boundary condition and try HF calculation (parabola fit) to enforce θ at contact line cell"
+        - "Handle three failure scenarios with fallback choices (horizontal/vertical HF or redefinition)."
+
+    algorithm6:
+      name: "Bisection hysteresis"
+      steps: ["set bracket", "update θ_i", "run Algo5", "update interval"]
+      brief:
+        - "Bisection iteration to compute θ^{n+1/2} within hysteresis window"
+        - "Initialize θ_i, apply Alg.5, reconstruct (n_{l,h}, c^{n+1/2}), find intersection P_i"
+        - "Update bracket [θ_min, θ_max] until convergence."
+
+  axisymmetric_notes:
+    flux_adjustment: "multiply tangential face area by 2πr"
+    curvature: "use HF curvature; axisymmetric correction optional"
+    divergence: "∇·u = ∂u_x/∂x + ∂u_r/∂r + u_r/r"
+    volume_element: "2 * pi * r * area_2D"
+    divergence_source: "1/r correction applied to radial fluxes"
+
+  source:
+    title: "A 2D sharp and conservative VOF method for modeling the contact line dynamics with hysteresis on complex boundary"
+    notes:
+      - "All equations and algorithms extracted from the reference paper"
+      - "Ready for implementation in Basilisk C"
+      - "Supports 2D axisymmetric simulations"
