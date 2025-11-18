@@ -121,6 +121,22 @@ ls *.mp4     # Check for video output
 ls field-*   # Check for field data
 ```
 
+### Step 4: Verify Examples
+
+**Automated verification** (recommended):
+```bash
+# Quick test all examples (0.001s simulation time)
+./verify-examples.sh --quick-test
+
+# Compile-only check (fastest)
+./verify-examples.sh --compile-only
+
+# Test specific example
+./verify-examples.sh --example circle-droplet --quick-test
+```
+
+**See**: [EXAMPLES_VERIFICATION.md](EXAMPLES_VERIFICATION.md) for complete verification guide
+
 ## File Structure
 
 ```
@@ -131,6 +147,7 @@ ls field-*   # Check for field data
 │   ├── BASILISK_INSTALL.md            # Basilisk installation guide
 │   ├── BASILISK_CONFIG.md             # Basilisk configuration and compiler flags
 │   ├── BASILISK_FEATURES.md           # Basilisk features used in this project
+│   ├── EXAMPLES_VERIFICATION.md       # Example verification and testing guide
 │   ├── DROPLET_IMPACT_ORIFICE.md      # Droplet impact simulation details
 │   ├── DROPLET_IMPACT_SPECS.md        # Simulation specifications
 │   ├── README_DROPLET_IMPACT.md       # Additional droplet impact documentation
@@ -140,6 +157,7 @@ ls field-*   # Check for field data
 ├── Build System/
 │   ├── Makefile                       # Build all simulations
 │   ├── setup-basilisk.sh              # Automated Basilisk installation script
+│   ├── verify-examples.sh             # Automated example verification script
 │   ├── compile-droplet-impact.sh      # Compile droplet impact simulations
 │   ├── run-sharp-orifice.sh           # Run sharp orifice simulation
 │   └── run-round-orifice.sh           # Run round orifice simulation
@@ -191,6 +209,14 @@ This repository includes comprehensive documentation:
   - Adaptive mesh refinement
   - Two-phase flow solver
   - Surface tension and contact line dynamics
+
+### Example Verification
+- **[EXAMPLES_VERIFICATION.md](EXAMPLES_VERIFICATION.md)** - Complete verification guide
+  - Inventory of all 6 example simulations
+  - Automated verification script usage
+  - Manual testing procedures
+  - Expected results and validation criteria
+  - Troubleshooting guide
 
 ### Simulation Documentation
 - **[DROPLET_IMPACT_ORIFICE.md](DROPLET_IMPACT_ORIFICE.md)** - Droplet impact simulations
