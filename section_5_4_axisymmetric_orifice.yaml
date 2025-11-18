@@ -1,0 +1,177 @@
+section_5_4_axisymmetric_orifice:
+
+  problem_description: >
+    A droplet falls in an ambient fluid and impacts a flat plate containing an
+    orifice (round or sharp). Inertia, viscosity, gravity, and surface tension
+    govern the droplet evolution. Although the physical experiment is 3D,
+    the simulation uses a 2D axisymmetric formulation.
+
+  physical_properties:
+    droplet:
+      density_rho_d: 1130.0        # kg/m^3
+      viscosity_mu_d: 0.007        # kg/(m·s)
+    ambient_fluid:
+      density_rho_f: 960.0         # kg/m^3
+      viscosity_mu_f: 0.048        # kg/(m·s)
+    interfacial:
+      surface_tension_sigma: 0.0295   # N/m
+    gravity:
+      g: 9.8                       # m/s^2
+
+  geometry:
+    description: "Axisymmetric domain representing the Fig. 23 geometry."
+    liquid_pool_top_above_plate: 120.0    # mm
+    plate_thickness_s: 2.0                # mm
+    droplet_release_height_above_orifice: 110.0   # mm
+    plate_position_from_right_boundary: 12.5      # mm
+    orifice:
+      diameter_d: 6.0                      # mm (both round- and sharp-edge)
+      round_orifice_edge_model:
+        shape: "semicircle"
+        semicircle_diameter_s: 2.0         # mm
+      sharp_orifice_edge_model:
+        description: "sharp edge (no semicircle)"
+
+  numerics:
+    mesh_size_delta: 3.91e-2        # mm
+    approx_resolution_cpr: 120      # cells per droplet radius
+    axisymmetry: "2D axisymmetric formulation"
+
+  round_orifice_case:
+    droplet_diameter_D: 9.315      # mm
+    Bond_number_Bo: 4.9
+    diameter_ratio_d_over_D: 0.644    # 6 / 9.315 ≈ 0.644
+    experimental_contact_angle_theta_s:
+      value: 55.0
+      uncertainty: 1.5              # degrees
+    simulation_contact_angle_theta_s: 180.0   # enforced to avoid contact
+
+    time_scale:
+      name: t_g
+      definition: "t_g = sqrt( (ρ_l * D) / ( (ρ_l - ρ_g) * g ) )"
+      usage: "used for nondimensionalization of times t0–t5"
+
+    nondimensional_times:
+      definition: "t* = t / t_g"
+      list:
+        t0: 0.00
+        t1: 0.54
+        t2: 1.27
+        t3: 1.81
+        t4: 2.44
+        t5: 2.96
+      experimental_time_reference: "t0 is the initial collision time, 10 ms before the droplet touches the plate."
+
+    behavioral_notes:
+      - "Because contact angle = 180°, the droplet does not touch the plate."
+      - "Interface conforms to arc of round orifice without penetration for 1 ≤ t* ≤ 4."
+
+  sharp_orifice_case:
+    droplet_diameter_D: 10.307     # mm
+    Bond_number_Bo: 6.0
+    diameter_ratio_d_over_D: 0.58   # 6 / 10.307 ≈ 0.58
+
+    contact_angle_hysteresis:
+      experimental:
+        advancing_theta_a: 68.0         # deg
+        receding_theta_r: 46.0
+        receding_uncertainty: 4.0       # ±4°
+      simulation:
+        theta_r_sim: 42.0               # deg
+        theta_a_sim: 68.0               # deg
+        rule: >
+          If instantaneous contact angle < θ_r, enforce θ_r.
+          If instantaneous contact angle > θ_a, enforce θ_a.
+
+    pinning_behavior:
+      observation: "Experiments show contact line pinning at sharp orifice edge."
+      simulation_artificial_enhancement:
+        method: "Artificially enlarge advancing angle locally to reproduce pinning."
+        value_theta_a_edge_override: 150.0  # deg
+        comment: "Used only in region of the sharp rim."
+
+    time_scale:
+      name: t_i
+      definition: "t_i = D^3 / ( U_i * d^2 )"
+      U_i_definition: "falling velocity measured 10 ms before impact"
+      usage: "used for nondimensionalization in Fig. 25"
+
+    nondimensional_times:
+      definition: "t* = t / t_i"
+      list:
+        - 0.49
+        - 0.73
+        - 0.90
+        - 1.04
+
+    behavioral_notes:
+      - "Hysteresis and pinning strongly affect the passage through the sharp orifice."
+      - "Simulation uses (θ_r, θ_a) = (42°, 68°) inside hysteresis window."
+      - "Local θ_a = 150° is used to mimic pinning."
+
+  boundary_conditions:
+    plate: "no-slip"
+    orifice_wall: "no-slip"
+    domain_right: "open/outflow (room for ambient fluid to rise)"
+    symmetry_axis: "axisymmetric boundary at r = 0"
+
+  implementation_files:
+    round_orifice:
+      source: "droplet-impact-round-orifice.c"
+      description: "2D axisymmetric simulation with semicircular orifice edges and θ=180°"
+    sharp_orifice:
+      source: "droplet-impact-sharp-orifice.c"
+      description: "2D axisymmetric simulation with sharp edges and contact angle hysteresis"
+    documentation:
+      readme: "README_DROPLET_IMPACT.md"
+      specs: "DROPLET_IMPACT_SPECS.md"
+    scripts:
+      compile: "compile-droplet-impact.sh"
+      run_round: "run-round-orifice.sh"
+      run_sharp: "run-sharp-orifice.sh"
+
+  reproducibility_summary:
+    essential_parameters_to_match:
+      - droplet diameter D
+      - orifice diameter d
+      - droplet release height = 110 mm
+      - fluid properties ρd, μd, ρf, μf
+      - surface tension σ
+      - gravity g
+      - mesh Δ = 3.91e−2 mm
+      - contact angles (θs = 180° for round; hysteresis (42°, 68°) for sharp)
+      - nondimensional time normalization (t_g or t_i)
+
+    simulation_outputs_to_compare:
+      - droplet shapes at nondimensional times t* (round: t0–t5)
+      - droplet shapes at t* (sharp: 0.49–1.04)
+      - contact line position
+      - penetration vs non-penetration through orifice
+      - interface shape matching experimental curves
+
+  validation_status:
+    implementation: "COMPLETE"
+    files_present:
+      - "✓ droplet-impact-round-orifice.c"
+      - "✓ droplet-impact-sharp-orifice.c"
+      - "✓ README_DROPLET_IMPACT.md"
+      - "✓ DROPLET_IMPACT_SPECS.md"
+      - "✓ compile-droplet-impact.sh"
+      - "✓ run-round-orifice.sh"
+      - "✓ run-sharp-orifice.sh"
+    parameters_verified:
+      - "✓ Physical properties match specification"
+      - "✓ Geometry parameters correct"
+      - "✓ Mesh resolution Δ = 3.91×10⁻⁵ m (120 cpr)"
+      - "✓ Contact angles correctly configured"
+      - "✓ Time scales properly defined"
+      - "✓ Boundary conditions properly set"
+    features_implemented:
+      - "✓ 2D axisymmetric formulation using axi.h"
+      - "✓ Embedded boundaries for plate and orifice"
+      - "✓ VOF method for interface tracking"
+      - "✓ Contact angle handling (static and hysteresis)"
+      - "✓ Contact line pinning at sharp edges"
+      - "✓ Adaptive mesh refinement"
+      - "✓ Volume conservation monitoring"
+      - "✓ Output at specified nondimensional times"

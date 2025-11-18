@@ -23,27 +23,79 @@ Simulates a droplet spreading on a cylindrical surface of similar size. Demonstr
 - Contact angle: 120° (adjustable)
 - Adaptive mesh refinement
 
-### 2. Axisymmetric Droplet Impact on Plate with Orifice (New)
+### 2. Axisymmetric Droplet Impact on Plate with Orifice (Section 5.4)
+
+**Files**: `droplet-impact-round-orifice.c`, `droplet-impact-sharp-orifice.c`
+
+**Complete implementation of Section 5.4** from the research paper, reproducing experimental validations of droplet impact on plates with round and sharp orifices.
+
+#### 2a. Round Orifice Case
+**File**: `droplet-impact-round-orifice.c`
+
+Simulates a droplet falling and impacting a plate with a **semicircular-edged orifice**. The simulation uses a contact angle of 180° to prevent wetting, matching experimental conditions.
+
+**Key Parameters**:
+- Droplet diameter: **D = 9.315 mm** (Bond number Bo = 4.9)
+- Orifice diameter: **d = 6 mm** (d/D = 0.644)
+- Semicircular edge radius: 1 mm
+- Contact angle: **θ = 180°** (no wetting)
+- Resolution: ~120 cells per droplet radius
+
+**Output times**: t* = 0, 0.54, 1.27, 1.81, 2.44, 2.96 (in gravitational time scale)
+
+#### 2b. Sharp Orifice Case
+**File**: `droplet-impact-sharp-orifice.c`
+
+Simulates a droplet impacting a plate with a **sharp-edged orifice**. Includes contact angle hysteresis and contact line pinning at the sharp edge.
+
+**Key Parameters**:
+- Droplet diameter: **D = 10.307 mm** (Bond number Bo = 6.0)
+- Orifice diameter: **d = 6 mm** (d/D = 0.58)
+- Sharp 90° edges (no rounding)
+- Contact angle hysteresis: **θᵣ = 42°, θₐ = 68°**
+- Pinning angle at edge: **θₐ = 150°**
+- Resolution: ~120 cells per droplet radius
+
+**Output times**: t* = 0.49, 0.73, 0.90, 1.04 (in gravitational time scale)
+
+**Documentation**:
+- See [README_DROPLET_IMPACT.md](README_DROPLET_IMPACT.md) for comprehensive guide
+- See [section_5_4_axisymmetric_orifice.yaml](section_5_4_axisymmetric_orifice.yaml) for complete YAML specification
+- See [DROPLET_IMPACT_SPECS.md](DROPLET_IMPACT_SPECS.md) for detailed parameters
+
+**Quick Start**:
+```bash
+# Compile both simulations
+./compile-droplet-impact.sh
+
+# Run round orifice case
+./run-round-orifice.sh
+
+# Run sharp orifice case
+./run-sharp-orifice.sh
+```
+
+### 3. General Droplet Impact Simulations
 
 **File**: `droplet-impact-orifice.c`
 
-Simulates the axisymmetric impact of a droplet on a flat plate containing a circular orifice (hole). Models realistic droplet impact scenarios with penetration through the orifice.
+General-purpose axisymmetric droplet impact simulation with adjustable parameters.
 
 **Features**:
-- Axisymmetric coordinates (computational efficiency)
-- Flat plate with circular orifice geometry
-- Impact dynamics with adjustable velocity
-- Contact angle control (wetting behavior)
+- Adjustable droplet size and impact velocity
+- Variable orifice size and geometry
+- Customizable contact angle
+- Flexible fluid properties
 - Detailed diagnostics and visualization
 
 **Documentation**: See [DROPLET_IMPACT_ORIFICE.md](DROPLET_IMPACT_ORIFICE.md) for detailed instructions.
 
-**Key Parameters**:
-- Droplet radius: 1 mm (adjustable)
-- Impact velocity: 1 m/s (adjustable)
-- Orifice radius: 0.4 mm (adjustable)
-- Contact angle: 90° (adjustable)
-- Fluid properties: Water/air (adjustable)
+**Key Parameters** (all adjustable):
+- Droplet radius: 1 mm
+- Impact velocity: 1 m/s
+- Orifice radius: 0.4 mm
+- Contact angle: 90°
+- Fluid properties: Water/air
 
 ## Quick Start
 
@@ -148,9 +200,10 @@ ls field-*   # Check for field data
 │   ├── BASILISK_CONFIG.md             # Basilisk configuration and compiler flags
 │   ├── BASILISK_FEATURES.md           # Basilisk features used in this project
 │   ├── EXAMPLES_VERIFICATION.md       # Example verification and testing guide
+│   ├── README_DROPLET_IMPACT.md       # Comprehensive droplet impact guide
 │   ├── DROPLET_IMPACT_ORIFICE.md      # Droplet impact simulation details
 │   ├── DROPLET_IMPACT_SPECS.md        # Simulation specifications
-│   ├── README_DROPLET_IMPACT.md       # Additional droplet impact documentation
+│   ├── section_5_4_axisymmetric_orifice.yaml  # Complete YAML spec for Section 5.4
 │   ├── NON-DIMENSIONALIZATION.md      # Non-dimensional formulation
 │   └── AXISYMMETRIC_GUIDE.md          # Axisymmetric coordinates guide
 │
@@ -220,9 +273,11 @@ This repository includes comprehensive documentation:
 
 ### Simulation Documentation
 - **[DROPLET_IMPACT_ORIFICE.md](DROPLET_IMPACT_ORIFICE.md)** - Droplet impact simulations
+- **[README_DROPLET_IMPACT.md](README_DROPLET_IMPACT.md)** - Comprehensive droplet impact guide
+- **[DROPLET_IMPACT_SPECS.md](DROPLET_IMPACT_SPECS.md)** - Simulation specifications
+- **[section_5_4_axisymmetric_orifice.yaml](section_5_4_axisymmetric_orifice.yaml)** - Complete YAML specification for Section 5.4 orifice simulations
 - **[AXISYMMETRIC_GUIDE.md](AXISYMMETRIC_GUIDE.md)** - Axisymmetric coordinates
 - **[NON-DIMENSIONALIZATION.md](NON-DIMENSIONALIZATION.md)** - Non-dimensional formulation
-- **[DROPLET_IMPACT_SPECS.md](DROPLET_IMPACT_SPECS.md)** - Simulation specifications
 
 ## Method Overview
 
