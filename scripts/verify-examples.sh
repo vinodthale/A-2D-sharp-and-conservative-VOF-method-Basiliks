@@ -147,7 +147,7 @@ check_basilisk() {
     if ! command -v qcc >/dev/null 2>&1; then
         log_error "qcc not found in PATH"
         log_error "Please install Basilisk C first"
-        log_info "See BASILISK_INSTALL.md for installation instructions"
+        log_info "See docs/BASILISK_INSTALL.md for installation instructions"
         exit 1
     fi
 
@@ -164,17 +164,34 @@ check_basilisk() {
 # Compile an example
 compile_example() {
     local example=$1
-    local source="${example}.c"
+    local source=""
+
+    # Determine source file path based on example name
+    case "$example" in
+        "circle-droplet")
+            source="src/2d-cartesian/${example}.c"
+            ;;
+        "droplet-impact-"*)
+            source="src/axisymmetric/${example}.c"
+            ;;
+        *)
+            source="${example}.c"
+            ;;
+    esac
 
     log_info "Compiling $example..."
+    log_info "Source: $source"
 
     if [ ! -f "$source" ]; then
         log_error "Source file not found: $source"
         return 1
     fi
 
+    # Include paths for custom headers
+    local include_flags="-I include/basilisk/core -I include/basilisk/methods"
+
     # Compile with error checking
-    if qcc -O2 -Wall -o "$example" "$source" -lm 2>&1 | tee "compile-${example}.log"; then
+    if qcc -O2 -Wall $include_flags -o "$example" "$source" -lm 2>&1 | tee "compile-${example}.log"; then
         if [ -f "$example" ]; then
             log_success "Compiled $example successfully"
             return 0
@@ -352,6 +369,10 @@ print_summary() {
 
 # Main execution
 main() {
+    # Change to repository root directory
+    cd "$(dirname "$0")/.." || exit 1
+    log_info "Working directory: $(pwd)"
+
     check_basilisk
     run_test_suite
     print_summary
