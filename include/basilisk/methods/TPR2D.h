@@ -1,6 +1,8 @@
 
 #include "fractions.h"
 
+#include "vof_utilities.h"
+
 /**
 Interface reconstruction within unstructured meshes (triangles, quadrilaterals, pentagons).*/
 

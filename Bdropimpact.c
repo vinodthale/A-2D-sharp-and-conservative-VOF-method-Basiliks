@@ -65,9 +65,10 @@ double Bubty0;      // Bubble center (radial) - always 0
 double timecontact; // Contact time
 
 // Output files
-FILE * fp_volume;   // Volume conservation log
-FILE * fp_interface;// Interface position log
-FILE * fp_duration; // Simulation duration log
+FILE * fp_volume = NULL;   // Volume conservation log
+FILE * fp_interface = NULL;// Interface position log
+FILE * fp_duration = NULL; // Simulation duration log
+FILE * fp_movie = NULL;    // Movie output file (for visualization)
 
 // CPU info for output naming
 int cpu_rank = 0;
@@ -398,10 +399,9 @@ event outputfiles(t += 0.1) {
 #include "view.h"
 
 event movies(t += 0.01) {
-    static FILE * fp = NULL;
     if (cpu_rank == 0) {
-        if (fp == NULL) {
-            fp = fopen("movie.ppm", "w");
+        if (fp_movie == NULL) {
+            fp_movie = fopen("movie.ppm", "w");
         }
 
         view(width = 800, height = 800);
@@ -418,13 +418,14 @@ event movies(t += 0.01) {
         // Draw cells
         cells();
 
-        save(fp = fp);
+        save(fp = fp_movie);
     }
 }
 
 event end_movie(t = end) {
-    if (cpu_rank == 0 && fp != NULL) {
-        fclose(fp);
+    if (cpu_rank == 0 && fp_movie != NULL) {
+        fclose(fp_movie);
+        fp_movie = NULL;
     }
 }
 #endif

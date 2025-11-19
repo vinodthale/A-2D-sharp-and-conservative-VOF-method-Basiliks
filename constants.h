@@ -14,6 +14,7 @@
 #define CONSTANTS_H
 
 #include <math.h>
+#include <stdlib.h>
 
 // =============================================================================
 // SIMULATION MODE SELECTION

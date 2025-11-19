@@ -1,5 +1,6 @@
 #include "embed_heights.h"
 
+#include "vof_utilities.h"
 
 #if dimension == 3
 foreach_dimension()

@@ -35,6 +35,8 @@ static void curvature_prolongation (Point point, scalar kappa)
 
 #include "parabola.h"
 
+#include "vof_utilities.h"
+
 static int independents (coord * p, int n)
 {
   if (n < 2)
