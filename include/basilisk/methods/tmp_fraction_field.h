@@ -2,6 +2,7 @@
 
 #include "TPR2D.h"
 
+#include "vof_utilities.h"
 
 static inline bool contact_embed_cell (Point point, scalar c, scalar contact_angle, scalar cs, scalar mark)
 {
